@@ -1,0 +1,6 @@
+[START CONVERSATION HISTORY]
+{{$history}}
+[END CONVERSATION HISTORY]
+
+User: {{$request}}
+Assistant: 
