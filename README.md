@@ -5,7 +5,9 @@ This repo demonstrates basic chat copilot capabilities of Semantic Kernel in Pyt
 - Connecting Azure OpenAI chat and embedding models to the kernel
 - Adding built-in Semantic Kernel plugins
 - Custom semantic and native plugins
-- Custom RAG plugin using Azure AI Search
+- Custom RAG plugin using Azure AI Search (using keyword search)
+
+For a step-by-step explanation of the code see [Getting started with Semantic Kernel](https://learn.microsoft.com/en-us/semantic-kernel/get-started/quick-start-guide?pivots=programming-language-python).
 
 ## Running the Copilot
 1. Clone this repo and open it in, e.g., VS Code.
