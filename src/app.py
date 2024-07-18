@@ -72,7 +72,7 @@ async def main():
     while True:
 
         # Get user input
-        user_input = input(f"{Fore.GREEN}You: ")
+        user_input = input(f"\n{Fore.GREEN}You: ")
         print(f"{Style.RESET_ALL}")
         
         # Get reply
