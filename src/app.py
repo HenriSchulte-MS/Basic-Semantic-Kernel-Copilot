@@ -14,6 +14,7 @@ import logging
 from colorama import Fore, Style
 from plugins.Search.search_plugin import SearchPlugin
 from plugins.Example.example_plugin import ExamplePlugin
+from plugins.Rejseplanen.rejseplanen_plugin import RejseplanenPlugin
 
 async def main():
     logging.basicConfig(level=logging.INFO)
@@ -61,6 +62,7 @@ async def main():
     search_plugin = SearchPlugin(azure_search_endpoint, azure_search_key)
     kernel.add_plugin(search_plugin, "search")
     example_plugin = kernel.add_plugin(ExamplePlugin(), "example")
+    rejseplanen_plugin = kernel.add_plugin(RejseplanenPlugin(), "rejseplanen")
 
     # Set up chat history
     chat_history = ChatHistory()
