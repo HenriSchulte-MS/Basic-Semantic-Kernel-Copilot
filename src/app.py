@@ -6,7 +6,7 @@ from semantic_kernel.core_plugins.math_plugin import MathPlugin
 from semantic_kernel.core_plugins.text_plugin import TextPlugin
 from semantic_kernel.core_plugins.time_plugin import TimePlugin
 from semantic_kernel.connectors.ai.open_ai.prompt_execution_settings.azure_chat_prompt_execution_settings import AzureChatPromptExecutionSettings
-from semantic_kernel.connectors.ai.function_call_behavior import FunctionCallBehavior
+from semantic_kernel.connectors.ai.function_choice_behavior import FunctionChoiceBehavior
 from dotenv import load_dotenv
 import os
 import asyncio
@@ -25,6 +25,9 @@ async def main():
     azure_ai_endpoint = os.getenv("AZURE_AI_ENDPOINT")
     azure_ai_key = os.getenv("AZURE_AI_KEY")
     logging.debug(f"Azure AI endpoint: {azure_ai_endpoint}, Azure AI key: {azure_ai_key}")
+    chat_deployment_name = os.getenv("AZURE_CHAT_DEPLOYMENT_NAME")
+    embedding_deployment_name = os.getenv("AZURE_EMBEDDING_DEPLOYMENT_NAME")
+    logging.debug(f"Chat deployment name: {chat_deployment_name}, Embedding deployment name: {embedding_deployment_name}")
     azure_search_endpoint = os.getenv("AZURE_SEARCH_ENDPOINT")
     azure_search_key = os.getenv("AZURE_SEARCH_KEY")
     logging.debug(f"Azure Search endpoint: {azure_search_endpoint}, Azure Search key: {azure_search_key}")
@@ -32,18 +35,19 @@ async def main():
     # Set up the kernel
     logging.debug("Setting up the kernel")
     kernel = Kernel()
-    kernel.add_service(
-        AzureChatCompletion(
-            service_id="gpt-4o",
-            deployment_name="gpt-4o",
-            endpoint=azure_ai_endpoint,
-            api_key=azure_ai_key,
-        ),
+    # Assign the service to a variable first, as we'll invoke it later
+    chat_completion = AzureChatCompletion(
+        service_id="chat",
+        deployment_name=chat_deployment_name,
+        endpoint=azure_ai_endpoint,
+        api_key=azure_ai_key,
     )
+    kernel.add_service(chat_completion)
+
     kernel.add_service(
         AzureTextEmbedding(
-            service_id="text-embedding",
-            deployment_name="text-embedding-ada-002",
+            service_id="embedding",
+            deployment_name=embedding_deployment_name,
             endpoint=azure_ai_endpoint,
             api_key=azure_ai_key
         ),
@@ -67,6 +71,13 @@ async def main():
     chat_history.add_system_message("You are a helpful chatbot that can assist with a variety of tasks.")
     chat_history.add_assistant_message("Hello! How can I help you today?")
 
+    # Set up execution settings to enable function calling
+    execution_settings = AzureChatPromptExecutionSettings(
+        function_choice_behavior=FunctionChoiceBehavior(
+            filters={"excluded_plugins": ["Chat"]}
+        )
+    )
+
     # Chat loop
     logging.debug("Starting chat loop")
     while True:
@@ -76,24 +87,15 @@ async def main():
         print(f"{Style.RESET_ALL}")
         
         # Get reply
-        reply = await kernel.invoke(
-            function=chat_plugin["Chat"],
-            arguments=KernelArguments(
-                request=user_input,
-                history=chat_history,
-                settings=AzureChatPromptExecutionSettings(
-                    function_call_behavior=FunctionCallBehavior.EnableFunctions(
-                        auto_invoke=True,
-                        filters={"excluded_plugins": ["Chat"]}
-                    )
-                )
-            )
-        )
-        print(f"{Fore.YELLOW}Assistant: {reply}{Style.RESET_ALL}")
-        
-        # Update chat history
         chat_history.add_user_message(user_input)
+        reply = await chat_completion.get_chat_message_content(
+            chat_history=chat_history,
+            settings=execution_settings,
+            kernel=kernel
+        )
         chat_history.add_assistant_message(str(reply))
+
+        print(f"{Fore.YELLOW}Assistant: {reply}{Style.RESET_ALL}")
 
 
 if __name__ == "__main__":
