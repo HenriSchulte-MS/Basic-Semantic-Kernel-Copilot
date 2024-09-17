@@ -57,10 +57,6 @@ async def main():
     math_plugin = kernel.add_plugin(MathPlugin(), "math")
     text_plugin = kernel.add_plugin(TextPlugin(), "text")
     time_plugin = kernel.add_plugin(TimePlugin(), "time")
-    chat_plugin = kernel.add_plugin(
-        parent_directory=os.path.join(os.getcwd(), "src/plugins/"),
-        plugin_name="chat"
-    )
     search_plugin = SearchPlugin(azure_search_endpoint, azure_search_key)
     kernel.add_plugin(search_plugin, "search")
     example_plugin = kernel.add_plugin(ExamplePlugin(), "example")
@@ -73,7 +69,7 @@ async def main():
     # Set up execution settings to enable function calling
     execution_settings = AzureChatPromptExecutionSettings(
         function_choice_behavior=FunctionChoiceBehavior(
-            filters={"excluded_plugins": ["Chat"]}
+            filters={"excluded_plugins": ["example"]}  # Exclude the example plugin
         )
     )
 
